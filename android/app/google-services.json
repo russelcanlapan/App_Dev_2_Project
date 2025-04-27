@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "417738637346",
+    "project_id": "organice-95856",
+    "storage_bucket": "organice-95856.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417738637346:android:e03d1503980c7da298ca7b",
+        "android_client_info": {
+          "package_name": "com.example.organice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmA7Yy7kunv85WkjPgsP3WS1A8mKdr-yA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
