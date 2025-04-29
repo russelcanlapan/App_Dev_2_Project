@@ -98,6 +98,8 @@ class _RegisterPageState extends State<RegisterPage> {
           'username': username,
           'email': email,
           'uid': user.uid,
+          'preferredLightMode': 'Light Mode', // this value remembers the user's preference of light mode. The two options: 'Light Mode' and 'Dark Mode'
+          'preferredColour': 'blue' // this value remembers the user's preferred color. There could be many options such as: blue, red, greenAccent, yellow, orange, purple, etc...
         });
         return true;
       }

@@ -93,11 +93,11 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
             calendarStyle: CalendarStyle(
               selectedDecoration: BoxDecoration(
-                color: Colors.red,
+                color: Colors.blue,
                 shape: BoxShape.circle,
               ),
               todayDecoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.3),
+                color: Colors.blue.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
               weekendTextStyle: TextStyle(color: Colors.grey),

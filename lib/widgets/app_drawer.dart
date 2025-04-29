@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:weather/weather.dart';
 import '../calendar.dart';
 import '../assignments.dart';
 import '../settings.dart';
@@ -17,10 +19,20 @@ class _AppDrawerState extends State<AppDrawer> {
   String _email = 'No Email Found';
   bool _isLoading = true;
 
+  final WeatherFactory _weatherFactory =
+      WeatherFactory("5a4f62caa9dd98bf4b6b4902519ace0a");
+
+  Weather? _weather;
+
   @override
   void initState() {
     super.initState();
     getUserDoc();
+    _weatherFactory
+        .currentWeatherByCityName("Montreal")
+        .then((w) => setState(() {
+              _weather = w;
+            }));
   }
 
   // Function to fetch user document
@@ -36,16 +48,16 @@ class _AppDrawerState extends State<AppDrawer> {
           Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
           _username = data['username'] ?? 'No User Found';
           _email = FirebaseAuth.instance.currentUser!.email ?? 'No Email Found';
-          _isLoading = false;  // Set loading to false once data is fetched
+          _isLoading = false; // Set loading to false once data is fetched
         });
       } else {
         setState(() {
-          _isLoading = false;  // Set loading to false if document doesn't exist
+          _isLoading = false; // Set loading to false if document doesn't exist
         });
       }
     } catch (e) {
       setState(() {
-        _isLoading = false;  // Set loading to false in case of error
+        _isLoading = false; // Set loading to false in case of error
       });
       print('Error fetching user data: $e');
     }
@@ -88,25 +100,25 @@ class _AppDrawerState extends State<AppDrawer> {
                 _isLoading
                     ? CircularProgressIndicator()
                     : Column(
-                  children: [
-                    Text(
-                      _username,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                        children: [
+                          Text(
+                            _username,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            _email,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      _email,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -140,6 +152,8 @@ class _AppDrawerState extends State<AppDrawer> {
               );
             },
           ),
+          SizedBox(height: 75),
+          _buildWeatherUI(),
           Spacer(),
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -170,6 +184,64 @@ class _AppDrawerState extends State<AppDrawer> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWeatherUI() {
+    if (_weather == null) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return Container(
+        height: 250,
+        margin: EdgeInsets.all(15),
+        color: Colors.greenAccent.shade400,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_weather?.areaName ?? "No Area Found",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20)),
+            _dateTimeInfo(),
+            _weatherIcon(),
+            Text(_weather?.weatherDescription ?? "No Weather Description Found",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 20)),
+            Text(
+                "${_weather?.temperature?.celsius?.toStringAsFixed(0)}°C" ??
+                    "No Temperature found",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28)),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _dateTimeInfo() {
+    DateTime? now = _weather!.date;
+    return Column(
+      children: [
+        Text(
+          DateFormat("h:mm a").format(now!),
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ],
+    );
+  }
+
+  Widget _weatherIcon() {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+          image: DecorationImage(
+              image: NetworkImage(
+                  "http://openweathermap.org/img/wn/${_weather?.weatherIcon}@4x.png"))),
     );
   }
 }

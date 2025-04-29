@@ -28,7 +28,7 @@ class PasswordChangedPage extends StatelessWidget {
               ),
               SizedBox(height: 24),
               Text(
-                'Password Changed!',
+                'Email Sent!',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -36,7 +36,7 @@ class PasswordChangedPage extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                'Your password has been changed\nsuccessfully',
+                'You may now reset your password',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey[600],

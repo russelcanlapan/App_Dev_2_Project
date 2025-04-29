@@ -27,8 +27,8 @@ class AssignmentsPage extends StatefulWidget {
 }
 
 class _AssignmentsPageState extends State<AssignmentsPage> {
-
-  Future<void> _showAssignmentDialog() async { // the ADD dialog
+  Future<void> _showAssignmentDialog() async {
+    // the ADD dialog
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final courseController = TextEditingController();
@@ -40,7 +40,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Add Assignment', style: TextStyle(color: Colors.blueAccent.shade700)),
+              title: Text('Add Assignment',
+                  style: TextStyle(color: Colors.blueAccent.shade700)),
               backgroundColor: Colors.white,
               iconColor: Colors.blue,
               shadowColor: Colors.blue,
@@ -93,7 +94,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                               });
                             }
                           },
-                          child: Text('Select Date', style: TextStyle(color: Colors.blue)),
+                          child: Text('Select Date',
+                              style: TextStyle(color: Colors.blue)),
                         ),
                       ],
                     ),
@@ -133,7 +135,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                     }
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade50),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade50),
                   child: Text('Add', style: TextStyle(color: Colors.blue)),
                 ),
               ],
@@ -144,8 +147,10 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
     );
   }
 
-  Future<void> _showUpdateAssignmentDialog( // the EDIT dialog
-      String docId, Assignment? existingAssignment) async {
+  Future<void> _showUpdateAssignmentDialog(
+      // the EDIT dialog
+      String docId,
+      Assignment? existingAssignment) async {
     final titleController =
         TextEditingController(text: existingAssignment?.title ?? '');
     final descriptionController =
@@ -160,7 +165,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Edit Assignment', style: TextStyle(color: Colors.blueAccent.shade700)),
+              title: Text('Edit Assignment',
+                  style: TextStyle(color: Colors.blueAccent.shade700)),
               backgroundColor: Colors.white,
               content: SingleChildScrollView(
                 child: Column(
@@ -211,7 +217,8 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                               });
                             }
                           },
-                          child: Text('Select Date', style: TextStyle(color: Colors.blue)),
+                          child: Text('Select Date',
+                              style: TextStyle(color: Colors.blue)),
                         ),
                       ],
                     ),
@@ -224,40 +231,40 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                   child: Text('Cancel', style: TextStyle(color: Colors.blue)),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    if (titleController.text.isEmpty ||
-                        courseController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content:
-                                Text('Please fill in all required fields')),
+                    onPressed: () {
+                      if (titleController.text.isEmpty ||
+                          courseController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text('Please fill in all required fields')),
+                        );
+                        return;
+                      }
+
+                      final updatedAssignment = Assignment(
+                        title: titleController.text,
+                        description: descriptionController.text,
+                        dueDate: selectedDate,
+                        course: courseController.text,
+                        isCompleted: existingAssignment?.isCompleted ?? false,
                       );
-                      return;
-                    }
 
-                    final updatedAssignment = Assignment(
-                      title: titleController.text,
-                      description: descriptionController.text,
-                      dueDate: selectedDate,
-                      course: courseController.text,
-                      isCompleted: existingAssignment?.isCompleted ?? false,
-                    );
+                      FirebaseFirestore.instance
+                          .collection("assignments")
+                          .doc(docId)
+                          .update({
+                        "title": updatedAssignment.title,
+                        "description": updatedAssignment.description,
+                        "course": updatedAssignment.course,
+                        "date": updatedAssignment.dueDate,
+                      });
 
-                    FirebaseFirestore.instance
-                        .collection("assignments")
-                        .doc(docId)
-                        .update({
-                      "title": updatedAssignment.title,
-                      "description": updatedAssignment.description,
-                      "course": updatedAssignment.course,
-                      "date": updatedAssignment.dueDate,
-                    });
-
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade50),
-                  child: Text('Save', style: TextStyle(color: Colors.blue))
-                ),
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade50),
+                    child: Text('Save', style: TextStyle(color: Colors.blue))),
               ],
             );
           },
@@ -326,7 +333,10 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
-                      .collection("assignments").where('creator', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                      .collection("assignments")
+                      .where('creator',
+                          isEqualTo: FirebaseAuth.instance.currentUser!.uid).
+                    orderBy('date', descending: false)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -345,6 +355,11 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                       itemBuilder: (context, index) {
                         final doc = docs[index];
                         final data = doc.data() as Map<String, dynamic>;
+                        Color _colour = Colors.white as Color;
+                        if (Timestamp.now().toDate().day.compareTo(data['date'].toDate().day) == 1 &&
+                            Timestamp.now().toDate().month.compareTo(data['date'].toDate().month) == 0) { // if the due date is late
+                          _colour = Colors.red.shade300 as Color;
+                        }
                         final assignment = Assignment(
                           title: data['title'],
                           description: data['description'],
@@ -364,7 +379,7 @@ class _AssignmentsPageState extends State<AssignmentsPage> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500)),
                             iconColor: Colors.blue,
-                            collapsedBackgroundColor: Colors.white,
+                            collapsedBackgroundColor: _colour,
                             backgroundColor: Colors.white,
                             children: [
                               ListTile(

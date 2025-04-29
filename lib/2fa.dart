@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:organice/password_changed.dart';
 import 'login.dart';
-import 'verification.dart';
 
 class TwoFactorAuthPage extends StatefulWidget {
   const TwoFactorAuthPage({super.key});
@@ -41,7 +42,7 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "Don't worry! It occurs. Please enter the email\naddress linked with your account.",
+                  "Don't worry! It happens. Please enter the email\naddress linked with your account.",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -68,13 +69,16 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VerificationPage(),
-                        ),
-                      );
+                    onPressed: () async {
+                      bool reset = await resetPassword();
+                      if (reset == true){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PasswordChangedPage(),
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
@@ -116,4 +120,16 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
       ),
     );
   }
+
+  Future<bool> resetPassword() async {
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
+        return true;
+      }
+      on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${e}')));
+        return false;
+      }
+  }
+
 }
