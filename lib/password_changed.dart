@@ -6,10 +6,14 @@ class PasswordChangedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -17,12 +21,19 @@ class PasswordChangedPage extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.green,
+                  color: colorScheme.primary,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.check,
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   size: 40,
                 ),
               ),
@@ -32,6 +43,7 @@ class PasswordChangedPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               SizedBox(height: 8),
@@ -39,8 +51,8 @@ class PasswordChangedPage extends StatelessWidget {
                 'You may now reset your password',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  fontSize: 16,
                 ),
               ),
               SizedBox(height: 32),
@@ -58,12 +70,14 @@ class PasswordChangedPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    elevation: 2,
+                    shadowColor: colorScheme.primary.withOpacity(0.3),
                   ),
-                  child: Text('Back to Login', style: TextStyle(color: Colors.white)),
+                  child: Text('Back to Login', style: TextStyle(color: colorScheme.onPrimary)),
                 ),
               ),
             ],

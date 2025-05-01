@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'theme/theme_provider.dart';
+import 'splash_screen.dart';
 import 'login.dart';
 import 'register.dart';
 import '2fa.dart';
+import 'services/firebase_api.dart';
+import 'services/location_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +18,13 @@ void main() async {
         messagingSenderId: '417738637346',
         projectId: 'organice-95856')
   );
-
-  runApp(const MyApp());
+  await FirebaseAPI.initializeNotifications();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -22,45 +32,41 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: WelcomePage(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: themeProvider.theme,
+          home: SplashScreen(),
+        );
+      },
     );
   }
 }
 
-class WelcomePage extends StatefulWidget {
+class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
-  State<WelcomePage> createState() => _WelcomePageState();
-}
-
-class _WelcomePageState extends State<WelcomePage> {
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.blue),
+                border: Border.all(color: colorScheme.primary),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 'ORGANICE',
                 style: TextStyle(
-                  color: Colors.blue,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 48
                 ),
@@ -77,10 +83,10 @@ class _WelcomePageState extends State<WelcomePage> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: colorScheme.secondary,
                   padding: EdgeInsets.symmetric(vertical: 15),
                 ),
-                child: Text('Login', style: TextStyle(color: Colors.white)),
+                child: Text('Login', style: TextStyle(color: colorScheme.onSecondary)),
               ),
             ),
             SizedBox(height: 10),
@@ -94,10 +100,10 @@ class _WelcomePageState extends State<WelcomePage> {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.black),
+                  side: BorderSide(color: colorScheme.secondary),
                   padding: EdgeInsets.symmetric(vertical: 15),
                 ),
-                child: Text('Register', style: TextStyle(color: Colors.black)),
+                child: Text('Register', style: TextStyle(color: colorScheme.secondary)),
               ),
             ),
             SizedBox(height: 20),
@@ -111,7 +117,7 @@ class _WelcomePageState extends State<WelcomePage> {
               child: Text(
                 'Forgot password?',
                 style: TextStyle(
-                  color: Colors.blue,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   decoration: TextDecoration.none,
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
 import '../calendar.dart';
@@ -6,6 +7,8 @@ import '../assignments.dart';
 import '../settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../main.dart';
+import '../services/location_services.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -18,9 +21,11 @@ class _AppDrawerState extends State<AppDrawer> {
   String _username = 'No User Found';
   String _email = 'No Email Found';
   bool _isLoading = true;
+  var lat;
+  var long;
 
   final WeatherFactory _weatherFactory =
-      WeatherFactory("5a4f62caa9dd98bf4b6b4902519ace0a");
+      WeatherFactory("8b50ab72d9bf8e21c4b502fe7cce56a4");
 
   Weather? _weather;
 
@@ -28,14 +33,9 @@ class _AppDrawerState extends State<AppDrawer> {
   void initState() {
     super.initState();
     getUserDoc();
-    _weatherFactory
-        .currentWeatherByCityName("Montreal")
-        .then((w) => setState(() {
-              _weather = w;
-            }));
+    getLocation();
   }
 
-  // Function to fetch user document
   Future<void> getUserDoc() async {
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -48,139 +48,185 @@ class _AppDrawerState extends State<AppDrawer> {
           Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
           _username = data['username'] ?? 'No User Found';
           _email = FirebaseAuth.instance.currentUser!.email ?? 'No Email Found';
-          _isLoading = false; // Set loading to false once data is fetched
+          _isLoading = false;
         });
       } else {
         setState(() {
-          _isLoading = false; // Set loading to false if document doesn't exist
+          _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _isLoading = false; // Set loading to false in case of error
+        _isLoading = false;
       });
       print('Error fetching user data: $e');
     }
   }
 
-  Future<bool> logout() async {
+  Future<void> getLocation() async {
     try {
-      await FirebaseAuth.instance.signOut();
-      return true;
+      Position position = await LocationServices.getCurrentLocation();
+      setState(() {
+        lat = position.latitude;
+        long = position.longitude;
+      });
+
+      if (lat != null && long != null) {
+        _weatherFactory
+            .currentWeatherByLocation(lat, long)
+            .then((w) => setState(() {
+          _weather = w;
+        }));
+      } else {
+        _weatherFactory
+            .currentWeatherByCityName("Philadelphia")
+            .then((w) => setState(() {
+          _weather = w;
+        }));
+      }
+
+      print(lat);
+      print(long);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error signing out')),
-      );
-      return false;
+      print('Error getting location: $e');
+      // Fallback to using a city name if there's an error
+      _weatherFactory
+          .currentWeatherByCityName("Philadelphia")
+          .then((w) => setState(() {
+        _weather = w;
+      }));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Drawer(
-      child: Column(
+      elevation: 0,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           Container(
-            width: double.infinity,
-            color: Colors.blue,
-            padding: EdgeInsets.symmetric(vertical: 32),
+            padding: EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              // not here
+              color: colorScheme.primary,
+            ),
+            margin: EdgeInsets.all(0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // not here
               children: [
+                // not here
                 CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 30,
-                  child: Icon(
-                    Icons.person,
-                    size: 35,
-                    color: Colors.blue,
+                  child:
+                      Icon(Icons.person, color: colorScheme.primary, size: 40),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  _username,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 12),
-                // Show loading indicator while fetching user data
-                _isLoading
-                    ? CircularProgressIndicator()
-                    : Column(
-                        children: [
-                          Text(
-                            _username,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            _email,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                Text(
+                  _email,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
           ),
-          ListTile(
-            leading: Icon(Icons.calendar_today),
-            title: Text('Calendar'),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => CalendarPage()),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.assignment),
-            title: Text('Assignments'),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => AssignmentsPage()),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Settings'),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
-              );
-            },
-          ),
-          SizedBox(height: 75),
-          _buildWeatherUI(),
-          Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () async {
-                if (await logout() == true) {
-                  Navigator.pushReplacementNamed(context, '/');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                elevation: 0,
-                minimumSize: Size(double.infinity, 0),
+          Column(
+            children: [
+              ListTile(
+                leading: Icon(Icons.calendar_today, color: colorScheme.primary),
+                title: Text('Calendar',
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyLarge?.color)),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => CalendarPage()),
+                  );
+                },
               ),
-              child: Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              ListTile(
+                leading: Icon(Icons.assignment, color: colorScheme.primary),
+                title: Text('Assignments',
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyLarge?.color)),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => AssignmentsPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.settings, color: colorScheme.primary),
+                title: Text('Settings',
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyLarge?.color)),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingsPage()),
+                  );
+                },
+              ),
+            ],
+          ),
+          Column(
+            children: [_buildWeatherUI()],
+          ),
+          Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => WelcomePage()),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Logout',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

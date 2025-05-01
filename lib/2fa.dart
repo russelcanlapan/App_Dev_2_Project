@@ -15,20 +15,26 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -38,33 +44,54 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: 8),
                 Text(
                   "Don't worry! It happens. Please enter the email\naddress linked with your account.",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: isDark ? Colors.white70 : Colors.black87,
                     fontSize: 14,
                   ),
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 32),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: 'Enter your email',
+                    hintStyle: TextStyle(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -81,20 +108,24 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                      backgroundColor: colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Text('Send Code',
-                        style: TextStyle(color: Colors.white)),
+                    child: Text('Send Code', style: TextStyle(color: colorScheme.onPrimary)),
                   ),
                 ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                SizedBox(height: 30),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Remember Password? '),
+                    Text(
+                      "Remember Password? ",
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.pushReplacement(
@@ -105,14 +136,13 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
                       child: Text(
                         'Login',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
               ],
             ),
           ),
@@ -122,14 +152,18 @@ class _TwoFactorAuthPageState extends State<TwoFactorAuthPage> {
   }
 
   Future<bool> resetPassword() async {
-      try {
-        await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
-        return true;
-      }
-      on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${e}')));
-        return false;
-      }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim()
+      );
+      return true;
+    }
+    on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${e}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return false;
+    }
   }
-
 }

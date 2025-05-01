@@ -40,8 +40,7 @@ class _RegisterPageState extends State<RegisterPage> {
         .where('username', isEqualTo: username)
         .get();
 
-    return querySnapshot
-        .docs.isNotEmpty; // If there are any docs, the username is taken
+    return querySnapshot.docs.isNotEmpty;
   }
 
   Future<bool> isEmailTaken(String email) async {
@@ -50,12 +49,10 @@ class _RegisterPageState extends State<RegisterPage> {
         .where('email', isEqualTo: email)
         .get();
 
-    return querySnapshot
-        .docs.isNotEmpty; // If there are any docs, the username is taken
+    return querySnapshot.docs.isNotEmpty;
   }
 
   Future<bool> createUser() async {
-    // Check if the fields are not empty and passwords match
     if (_usernameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
@@ -69,11 +66,9 @@ class _RegisterPageState extends State<RegisterPage> {
       String email = _emailController.text.trim();
       String password = _passwordController.text.trim();
 
-      // Check if the username or email is already taken
       bool usernameTaken = await isUsernameTaken(username);
       bool emailTaken = await isEmailTaken(email);
 
-      // Show appropriate error messages
       if (usernameTaken) {
         _showSnackBar('This username is already taken');
         return false;
@@ -84,7 +79,6 @@ class _RegisterPageState extends State<RegisterPage> {
         return false;
       }
 
-      // Create user with email and password
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -93,46 +87,52 @@ class _RegisterPageState extends State<RegisterPage> {
       User? user = userCredential.user;
 
       if (user != null) {
-        // Store additional user data (username, email) in Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'username': username,
           'email': email,
           'uid': user.uid,
-          'preferredLightMode': 'Light Mode', // this value remembers the user's preference of light mode. The two options: 'Light Mode' and 'Dark Mode'
-          'preferredColour': 'blue' // this value remembers the user's preferred color. There could be many options such as: blue, red, greenAccent, yellow, orange, purple, etc...
+          'preferredLightMode': 'Light Mode',
+          'preferredColour': 'blue'
         });
         return true;
       }
 
     } catch (e) {
-      // Handle errors like network issues or unexpected failures
       print('Error creating user: $e');
     }
 
     return false;
   }
 
-// Helper function to show SnackBar
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: Theme.of(context).colorScheme.error,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back, 
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -142,6 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: 30),
@@ -149,14 +150,33 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: _usernameController,
                   decoration: InputDecoration(
                     hintText: 'Username',
+                    hintStyle: TextStyle(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: 16),
@@ -165,14 +185,33 @@ class _RegisterPageState extends State<RegisterPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: 'Email',
+                    hintStyle: TextStyle(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: 16),
@@ -181,20 +220,34 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Password',
+                    hintStyle: TextStyle(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey,
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: isDark ? Colors.white70 : Colors.black54,
                       ),
                       onPressed: () {
                         setState(() {
@@ -203,27 +256,44 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                   ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 SizedBox(height: 16),
                 TextField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
-                    hintText: 'Confirm password',
+                    hintText: 'Confirm Password',
+                    hintStyle: TextStyle(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey,
+                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        color: isDark ? Colors.white70 : Colors.black54,
                       ),
                       onPressed: () {
                         setState(() {
@@ -232,8 +302,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                   ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -241,9 +314,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     onPressed: () async {
                       bool created = await createUser();
                       if (created == true) {
-                        // Pop all routes until we reach the welcome page
                         Navigator.of(context).popUntil((route) => route.isFirst);
-                        // Then push the login page on top of welcome page
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => LoginPage()),
@@ -251,14 +322,40 @@ class _RegisterPageState extends State<RegisterPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                      backgroundColor: colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child:
-                        Text('Register', style: TextStyle(color: Colors.white)),
+                    child: Text('Register', style: TextStyle(color: colorScheme.onPrimary)),
                   ),
+                ),
+                SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Already have an account? ",
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      },
+                      child: Text(
+                        'Login Now',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
